@@ -122,6 +122,9 @@
     <Compile Include="Renderer\ConsoleRenderer.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="AI\TrainedNetwork">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

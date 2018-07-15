@@ -34,6 +34,9 @@ namespace Snake.AI
 
 				double endDistance = world.Snake.Location.Distance(world.Food.Location);
 
+				if (world.Bonus.ActiveTick > 100)
+					world.Bonus.ActiveTick = 100000;
+
 				if (startDistance > endDistance)
 					world.Score += MoveTowardsScore;
 				else

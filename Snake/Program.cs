@@ -14,6 +14,8 @@ namespace Snake
 {
 	class Program
 	{
+		static object _lockObject = new object();
+		const string TrainingFileName = @"AI\TrainingAi";
 		private static int trainWorldWidth = 20;
 		private static int trainWorldHeigh = 20;
 		private static int worldWidth = 40;
@@ -32,7 +34,7 @@ namespace Snake
 			var SuperNetwork = SnakeNeuralAI.CreateNetwork();
 
 			//Continue training AI
-			//SuperNetwork = (ActivationNetwork)ActivationNetwork.Load(@"c:\work\Snake\Snake\AI\TrainedNetwork");
+			//SuperNetwork = (ActivationNetwork)ActivationNetwork.Load(@"AI\TrainedNetwork");
 			
 			var SuperTeacher = new PerceptronLearning(SuperNetwork) { LearningRate = 0.1 };
 			int bestScore = 0;
@@ -82,22 +84,23 @@ namespace Snake
 						bestOfTheBest.AddResults(SuperTeacher);
 				}
 
+
 				bestScore = Math.Max(bestSnakeAI.Max(x => x.Score), bestScore);
 
-				Console.CursorVisible = false;
-				Console.SetCursorPosition(0, 0);
-				Console.WriteLine("Current average score: " + Math.Round(bestSnakeAI.Average(x => x.Score)) + "    ");
-				Console.WriteLine("Current best score: " + bestSnakeAI.Max(x => x.Score) + "     ");
-				Console.Write("Learning progress: " + Math.Round((100m / (learningIteration / (learningPeers + learningPeersRandom))) * i) + "% (" + i * (learningPeers + learningPeersRandom) + ")");
-				if (i > startMutantsAfterNumberOfRuns)
-					Console.WriteLine("   MUTANTS!!!");
-				else
-					Console.WriteLine();
-
-				if (Console.KeyAvailable)
+				lock (_lockObject)
 				{
-					Console.ReadKey();
-					break;
+					SuperNetwork.Save(TrainingFileName);
+
+					Console.CursorVisible = false;
+					Console.SetCursorPosition(0, 0);
+					Console.WriteLine("Current average score: " + Math.Round(bestSnakeAI.Average(x => x.Score)) + "    ");
+					Console.WriteLine("Current best score: " + bestSnakeAI.Max(x => x.Score) + "     ");
+					Console.Write("Learning progress: " + Math.Round((100m / (learningIteration / (learningPeers + learningPeersRandom))) * i) + "% (" + i * (learningPeers + learningPeersRandom) + ")");
+
+					if (i > startMutantsAfterNumberOfRuns)
+						Console.WriteLine("   MUTANTS!!!");
+					else
+						Console.WriteLine();
 				}
 			}
 			SuperNetwork.Save(@"c:\temp\Network" + bestScore);
@@ -106,24 +109,69 @@ namespace Snake
 
 		static void Main(string[] args)
 		{
-			//SnakeAI snakeAI = new SnakeFakeAI();
-			//SnakeNeuralAI snakeAI = TrainNeuralAI();
-			
-			SnakeNeuralAI snakeAI = new SnakeNeuralAI()
+			Console.WriteLine("Press 1 to train new neural network");
+			Console.WriteLine("Press 2 start snake with hardcoded AI");
+			Console.WriteLine("Press 3 to load trained network");
+
+			var key = Console.ReadKey();
+
+			bool isTraining = false;
+
+			SnakeAI snakeAI = null;
+			if (key.KeyChar == '1')
 			{
-				Network = ActivationNetwork.Load(@"c:\work\Snake\Snake\AI\TrainedNetwork")
-			};
+				isTraining = true;
+
+				if (File.Exists(TrainingFileName))
+					File.Delete(TrainingFileName);
+				new Thread(() =>
+				{
+					Thread.CurrentThread.IsBackground = true;
+					TrainNeuralAI();
+				}).Start();
+			}
+			else
+			if (key.KeyChar == '2')
+			{
+				snakeAI = new SnakeFakeAI();
+			}
+			else
+			{
+				snakeAI = new SnakeNeuralAI()
+				{
+					Network = ActivationNetwork.Load(@"AI\TrainedNetwork")
+				};
+			}
+
+			Console.Clear();
 
 
 			while (true)
 			{
+				if (isTraining)
+				{
+					lock (_lockObject)
+					{
+						if (!File.Exists(TrainingFileName))
+							continue;
+
+						snakeAI = new SnakeNeuralAI()
+						{
+							Network = ActivationNetwork.Load(TrainingFileName)
+						};
+					}
+				}
+
 				World world = new World(worldWidth, worldHeigh, foodPoints);
 
 				while (world.Snake.Alive)
 				{
 					snakeAI.MakeDecision(world);
 
-					ConsoleRenderer.Render(world);
+					lock (_lockObject)
+					{
+						ConsoleRenderer.Render(world);
+					}
 					Thread.Sleep(80);
 
 
@@ -134,7 +182,10 @@ namespace Snake
 					}
 				}
 
-				ConsoleRenderer.Render(world);
+				lock (_lockObject)
+				{
+					ConsoleRenderer.Render(world);
+				}
 				Thread.Sleep(2000);
 			}
 		}

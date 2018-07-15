@@ -14,7 +14,7 @@ namespace Snake.Game
 		{
 			ActiveTick++;
 
-			if (ActiveTick > 500)
+			if (ActiveTick > 300)
 				Active = true;
 		}
 	}
