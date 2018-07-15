@@ -9,12 +9,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using AForge.Neuro;
 using AForge.Neuro.Learning;
+using System.Diagnostics;
 
 namespace Snake
 {
 	class Program
 	{
-		static object _lockObject = new object();
+		static object _lockObjectConsole = new object();
+		static object _lockObjectFile = new object();
 		const string TrainingFileName = @"AI\TrainingAi";
 		private static int trainWorldWidth = 20;
 		private static int trainWorldHeigh = 20;
@@ -26,16 +28,17 @@ namespace Snake
 		private static int learningPeersRandom = 350;
 		//private static int numberOfLearningPaths = 5;
 		private static int learningPeersToUseForSuper = 20;
-		private static long startMutantsAfterNumberOfRuns = 100000000000 /(learningPeers + learningPeersRandom);
 
 
 		public static SnakeNeuralAI TrainNeuralAI()
 		{
+			Stopwatch stopwatch = new Stopwatch();
+			stopwatch.Start();
 			var SuperNetwork = SnakeNeuralAI.CreateNetwork();
 
 			//Continue training AI
 			//SuperNetwork = (ActivationNetwork)ActivationNetwork.Load(@"AI\TrainedNetwork");
-			
+
 			var SuperTeacher = new PerceptronLearning(SuperNetwork) { LearningRate = 0.1 };
 			int bestScore = 0;
 
@@ -45,32 +48,33 @@ namespace Snake
 			{
 				bestSnakeAI.Clear();
 
-				for (int j = 0; j < learningPeers; j++)
+				using (MemoryStream stream = new MemoryStream())
 				{
-					SnakeNeuralAI snakeAI;
+					SuperNetwork.Save(stream);
 
-					//SnakeNeuralAiTrainer parent = trainers[j % numberOfLearningPaths];
-					snakeAI = SnakeNeuralAI.Clone(SuperNetwork, true);
+					for (int j = 0; j < learningPeers; j++)
+					{
+						stream.Seek(0, SeekOrigin.Begin);
+						SnakeNeuralAI snakeAI = new SnakeNeuralAI(true, stream);
 
-					if (snakeAI.random.Next(10000) < 3)
-						snakeAI.isMutant = true;
+						if (snakeAI.random.Next(10000) < 3)
+							snakeAI.isMutant = true;
 
-					bestSnakeAI.Add(new SnakeNeuralAiTrainer(snakeAI));
+						bestSnakeAI.Add(new SnakeNeuralAiTrainer(snakeAI));
 
-				}
+					}
 
-				for (int j = 0; j < learningPeersRandom; j++)
-				{
-					SnakeNeuralAI snakeAI = SnakeNeuralAI.Clone(SuperNetwork, true);
-					if (i < startMutantsAfterNumberOfRuns)
+					for (int j = 0; j < learningPeersRandom; j++)
+					{
+						stream.Seek(0, SeekOrigin.Begin);
+						SnakeNeuralAI snakeAI = new SnakeNeuralAI(true, stream);
 						snakeAI.Network.Randomize();
-					else
-						snakeAI.isMutant = true;
 
-					bestSnakeAI.Add(new SnakeNeuralAiTrainer(snakeAI));
+						bestSnakeAI.Add(new SnakeNeuralAiTrainer(snakeAI));
+					}
 				}
 
-				Parallel.ForEach(bestSnakeAI, new ParallelOptions(), (trainer) =>
+				Parallel.ForEach(bestSnakeAI, new ParallelOptions() { MaxDegreeOfParallelism = 6 }, (trainer) =>
 				{
 					World world = new World(trainWorldWidth, trainWorldHeigh, foodPoints);
 					trainer.Train(world);
@@ -87,20 +91,16 @@ namespace Snake
 
 				bestScore = Math.Max(bestSnakeAI.Max(x => x.Score), bestScore);
 
-				lock (_lockObject)
+				lock (_lockObjectFile)
 				{
 					SuperNetwork.Save(TrainingFileName);
-
-					Console.CursorVisible = false;
+				}
+				lock (_lockObjectConsole)
+				{
 					Console.SetCursorPosition(0, 0);
 					Console.WriteLine("Current average score: " + Math.Round(bestSnakeAI.Average(x => x.Score)) + "    ");
 					Console.WriteLine("Current best score: " + bestSnakeAI.Max(x => x.Score) + "     ");
-					Console.Write("Learning progress: " + Math.Round((100m / (learningIteration / (learningPeers + learningPeersRandom))) * i) + "% (" + i * (learningPeers + learningPeersRandom) + ")");
-
-					if (i > startMutantsAfterNumberOfRuns)
-						Console.WriteLine("   MUTANTS!!!");
-					else
-						Console.WriteLine();
+					Console.WriteLine("Learning progress: " + Math.Round((100m / (learningIteration / (learningPeers + learningPeersRandom))) * i) + "% (" + i * (learningPeers + learningPeersRandom) + " games played in " + stopwatch.Elapsed.ToString(@"hh\:mm\:ss") + ")");
 				}
 			}
 			SuperNetwork.Save(@"c:\temp\Network" + bestScore);
@@ -109,6 +109,7 @@ namespace Snake
 
 		static void Main(string[] args)
 		{
+			Console.CursorVisible = false;
 			Console.WriteLine("Press 1 to train new neural network");
 			Console.WriteLine("Press 2 start snake with hardcoded AI");
 			Console.WriteLine("Press 3 to load trained network");
@@ -126,7 +127,7 @@ namespace Snake
 					File.Delete(TrainingFileName);
 				new Thread(() =>
 				{
-					Thread.CurrentThread.IsBackground = true;
+					Thread.CurrentThread.Priority = ThreadPriority.BelowNormal;
 					TrainNeuralAI();
 				}).Start();
 			}
@@ -150,7 +151,7 @@ namespace Snake
 			{
 				if (isTraining)
 				{
-					lock (_lockObject)
+					lock (_lockObjectFile)
 					{
 						if (!File.Exists(TrainingFileName))
 							continue;
@@ -164,15 +165,17 @@ namespace Snake
 
 				World world = new World(worldWidth, worldHeigh, foodPoints);
 
+				Stopwatch stopwatch = new Stopwatch();
 				while (world.Snake.Alive)
 				{
+					stopwatch.Restart();
 					snakeAI.MakeDecision(world);
 
-					lock (_lockObject)
+					lock (_lockObjectConsole)
 					{
 						ConsoleRenderer.Render(world);
 					}
-					Thread.Sleep(80);
+					Thread.Sleep(Math.Max(0, 50 - (int)stopwatch.ElapsedMilliseconds));
 
 
 					if (Console.KeyAvailable)
@@ -182,7 +185,7 @@ namespace Snake
 					}
 				}
 
-				lock (_lockObject)
+				lock (_lockObjectConsole)
 				{
 					ConsoleRenderer.Render(world);
 				}

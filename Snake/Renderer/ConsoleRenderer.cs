@@ -9,7 +9,6 @@ namespace Snake.Renderer
     {
 		public static void Render(World world)
 		{
-			Console.CursorVisible = false;
 			Console.SetCursorPosition(0, 3);
 			Console.WriteLine();
 
@@ -39,18 +38,6 @@ namespace Snake.Renderer
 					if (x == world.Food.Location.X && y == world.Food.Location.Y)
 					{
 						Console.Write('*');
-						continue;
-					}
-
-					if (x == world.Food.Location.X && y == world.Food.Location.Y)
-					{
-						Console.Write('*');
-						continue;
-					}
-
-					if (world.Bonus.Active && x == world.Bonus.Location.X && y == world.Bonus.Location.Y)
-					{
-						Console.Write('?');
 						continue;
 					}
 

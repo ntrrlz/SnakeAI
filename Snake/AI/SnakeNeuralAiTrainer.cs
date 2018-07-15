@@ -10,9 +10,6 @@ namespace Snake.AI
 {
 	public class SnakeNeuralAiTrainer
 	{
-		private static int MoveTowardsScore = 10;
-		private static int MoveAwayScore = -15;
-
 		public SnakeNeuralAI SnakeNeuralAI { get; set; }
 		public int Score { get; set; }
 
@@ -25,22 +22,24 @@ namespace Snake.AI
 		public void Train(World world)
 		{
 			int limit = 0;
-			while (world.Snake.Alive && world.Score > -30 && limit < 25000)
+			int noChangeScore = int.MinValue;
+			int noChangeCounter = 0;
+			while (world.Snake.Alive && 
+				(world.Score*2 > limit || limit < 100) &&  //If the snake is running in circles, save cpu cycles and abort run
+				noChangeCounter < 255 && //No food picked in 255 cycles? Running in cycles..:(
+				limit < 1000000) //Limit runtime
 			{
-				double startDistance = world.Snake.Location.Distance(world.Food.Location);
-				
+				if (world.Score == noChangeScore)
+				{
+					noChangeCounter++;
+				}
+				else
+				{
+					noChangeScore = world.Score;
+					noChangeCounter = 0;
+				}
 				SnakeNeuralAI.MakeDecision(world);
 				limit++;
-
-				double endDistance = world.Snake.Location.Distance(world.Food.Location);
-
-				if (world.Bonus.ActiveTick > 100)
-					world.Bonus.ActiveTick = 100000;
-
-				if (startDistance > endDistance)
-					world.Score += MoveTowardsScore;
-				else
-					world.Score += MoveAwayScore;
 			}
 
 			this.Score = world.Score;// (this.Score + world.Score + Math.Max(this.Score, world.Score) * 10) / 12;
