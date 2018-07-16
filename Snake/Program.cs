@@ -18,9 +18,9 @@ namespace Snake
 		static object _lockObjectConsole = new object();
 		static object _lockObjectFile = new object();
 		const string TrainingFileName = @"AI\TrainingAi";
-		private static int trainWorldWidth = 40;
+		private static int trainWorldWidth = 20;
 		private static int trainWorldHeigh = 20;
-		private static int worldWidth = 40;
+		private static int worldWidth = 20;
 		private static int worldHeigh = 20;
 		private static int foodPoints = 100;
 		private static long learningIteration = 10000000000;
@@ -178,7 +178,7 @@ namespace Snake
 					{
 						ConsoleRenderer.Render(world);
 					}
-					Thread.Sleep(Math.Max(0, 0 - (int)stopwatch.ElapsedMilliseconds));
+					Thread.Sleep(Math.Max(0, 30 - (int)stopwatch.ElapsedMilliseconds));
 
 
 					if (Console.KeyAvailable)
