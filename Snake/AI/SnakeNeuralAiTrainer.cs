@@ -1,5 +1,4 @@
-﻿using AForge.Neuro.Learning;
-using Snake.Game;
+﻿using Snake.Game;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +21,7 @@ namespace Snake.AI
 		public void Train(World world)
 		{
 			int limit = 0;
-			int noChangeScore = int.MinValue;
+			int noChangeScore = int.MinValue + 1000;
 			int noChangeCounter = 0;
 			while (world.Snake.Alive &&
 				world.Score > -100000 &&
@@ -39,24 +38,13 @@ namespace Snake.AI
 				}
 
 				if (noChangeCounter > 300) //No food picked in 300 cycles? Running in cycles..:(
-					world.Score = int.MinValue;
-
-				//world.Score-=3;
+					world.Score = int.MinValue + 1000;
 		
 				SnakeNeuralAI.MakeDecision(world);
 				limit++;
 			}
 
 			this.Score = world.Score;// (this.Score + world.Score + Math.Max(this.Score, world.Score) * 10) / 12;
-		}
-
-		public void AddResults(ISupervisedLearning superTeacher)
-		{
-			foreach (var run in SnakeNeuralAI.Runs)
-			{
-				//superTeacher.RunEpoch(new double[][] { run.Item1 }, new double[][] { run.Item2 });
-				superTeacher.Run(run.Item1, run.Item2);
-			}
 		}
 	}
 }

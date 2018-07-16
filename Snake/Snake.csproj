@@ -33,69 +33,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AForge">
-      <HintPath>..\Lib\AForge.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Controls">
-      <HintPath>..\Lib\AForge.Controls.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.DebuggerVisualizers %282010%29">
-      <HintPath>..\Lib\AForge.DebuggerVisualizers (2010).dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Fuzzy">
-      <HintPath>..\Lib\AForge.Fuzzy.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Genetic">
-      <HintPath>..\Lib\AForge.Genetic.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Imaging">
-      <HintPath>..\Lib\AForge.Imaging.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Imaging.Formats">
-      <HintPath>..\Lib\AForge.Imaging.Formats.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Imaging.IPPrototyper">
-      <HintPath>..\Lib\AForge.Imaging.IPPrototyper.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.MachineLearning">
-      <HintPath>..\Lib\AForge.MachineLearning.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Math">
-      <HintPath>..\Lib\AForge.Math.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Neuro">
-      <HintPath>..\Lib\AForge.Neuro.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Robotics.Lego">
-      <HintPath>..\Lib\AForge.Robotics.Lego.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Robotics.Surveyor">
-      <HintPath>..\Lib\AForge.Robotics.Surveyor.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Robotics.TeRK">
-      <HintPath>..\Lib\AForge.Robotics.TeRK.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Video">
-      <HintPath>..\Lib\AForge.Video.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Video.DirectShow">
-      <HintPath>..\Lib\AForge.Video.DirectShow.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Video.FFMPEG">
-      <HintPath>..\Lib\AForge.Video.FFMPEG.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Video.Kinect">
-      <HintPath>..\Lib\AForge.Video.Kinect.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Video.VFW">
-      <HintPath>..\Lib\AForge.Video.VFW.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Video.Ximea">
-      <HintPath>..\Lib\AForge.Video.Ximea.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Vision">
-      <HintPath>..\Lib\AForge.Vision.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -107,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AI\Decision.cs" />
+    <Compile Include="AI\NeuralNetwork.cs" />
     <Compile Include="AI\SnakeAI.cs" />
     <Compile Include="AI\SnakeFakeAi.cs" />
     <Compile Include="AI\SnakeNeuralAi.cs" />

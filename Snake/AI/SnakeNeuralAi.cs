@@ -1,6 +1,4 @@
-﻿using AForge.Neuro;
-using AForge.Neuro.Learning;
-using Snake.Game;
+﻿using Snake.Game;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,43 +7,35 @@ namespace Snake.AI
 {
 	public class SnakeNeuralAI : SnakeAI
 	{
-		public IList<Tuple<double[], double[]>> Runs = new List<Tuple<double[], double[]>>();
-
-		public Network Network;
+		public NeuralNetwork Network;
 		public bool isLearning;
-		public bool isMutant;
 
 		public SnakeNeuralAI Clone(bool learn)
 		{
-			return Clone((ActivationNetwork)this.Network, learn);
+			return Clone(this.Network, learn);
 		}
 
 
-		public static SnakeNeuralAI Clone(ActivationNetwork network, bool learn)
+		public static SnakeNeuralAI Clone(NeuralNetwork network, bool learn)
 		{
-			using (MemoryStream stream = new MemoryStream())
-			{
-				network.Save(stream);
-				stream.Seek(0, SeekOrigin.Begin);
-				SnakeNeuralAI clone = new SnakeNeuralAI(learn, stream);
+			SnakeNeuralAI clone = new SnakeNeuralAI(learn, new NeuralNetwork(network));
 
-				return clone;
-			}
+			return clone;
 		}
 
-		public SnakeNeuralAI(bool learn = false, Stream loadFromStream = null)
+		public SnakeNeuralAI(bool learn = false, NeuralNetwork exisingNetwork = null)
 		{
 			this.isLearning = learn;
 
-			if (loadFromStream != null)
-				Network = (ActivationNetwork)ActivationNetwork.Load(loadFromStream);
+			if (exisingNetwork != null)
+				Network = exisingNetwork;
 			else
 				Network = CreateNetwork();
 		}
 
-		public static ActivationNetwork CreateNetwork()
+		public static NeuralNetwork CreateNetwork()
 		{
-			return new ActivationNetwork(new BipolarSigmoidFunction(), 14, 3);
+			return new NeuralNetwork(new int[] { 14, 3 });
 		}
 
 		public override void MakeDecision(World world)
@@ -68,26 +58,17 @@ namespace Snake.AI
 				((double)world.Snake.Direction) / 4
 			};
 
-			double[] output = Network.Compute(input);
-
-			if (isLearning && isMutant && random.Next(100) < 2)
+			if (isLearning)
 			{
-				ReSeed();
- 				output = new double[]
-				{
-					random.NextDouble(),
-					random.NextDouble(),
-					random.NextDouble()
-				};
+				Network.Mutate();
 			}
+
+			double[] output = Network.FeedForward(input);
 
 			Decision finalDecision = ConvertOutputToDecision(output);				
 
 			ApplyDecision(world, finalDecision);
 			world.Update();
-
-			if (world.Snake.Alive)
-				Runs.Add(new Tuple<double[], double[]>(input, output));
 		}
 
 		public static Decision ConvertOutputToDecision(double[] output)

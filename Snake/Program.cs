@@ -4,11 +4,9 @@ using Snake.Game;
 using Snake.Renderer;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using AForge.Neuro;
-using AForge.Neuro.Learning;
+
 using System.Diagnostics;
 
 namespace Snake
@@ -24,90 +22,70 @@ namespace Snake
 		private static int worldHeigh = 20;
 		private static int foodPoints = 100;
 		private static long learningIteration = 10000000000;
-		private static int learningPeers = 350;
-		private static int learningPeersRandom = 150;
+		private static int learningPeers = 100;
+		private static int learningPeersMutants = 200;
 		//private static int numberOfLearningPaths = 5;
-		private static int learningPeersToUseForSuper = 20;
+		private static int parallelNetworks = 4;
 
+		private static NeuralNetwork SuperNetwork = SnakeNeuralAI.CreateNetwork();
 
-		public static SnakeNeuralAI TrainNeuralAI()
+		public static void TrainNeuralAI()
 		{
 			Stopwatch stopwatch = new Stopwatch();
 			stopwatch.Start();
-			var SuperNetwork = SnakeNeuralAI.CreateNetwork();
+			
 
 			//Continue training AI
 			//SuperNetwork = (ActivationNetwork)ActivationNetwork.Load(@"AI\TrainedNetwork");
 
-			var SuperTeacher = new PerceptronLearning(SuperNetwork) { LearningRate = 0.1 };
 			int bestScore = 0;
 
-			IList<SnakeNeuralAiTrainer> bestSnakeAI = new List<SnakeNeuralAiTrainer>();
+			IList<SnakeNeuralAiTrainer> students = new List<SnakeNeuralAiTrainer>();
+			IList<SnakeNeuralAiTrainer> bestSnakeAIs = new List<SnakeNeuralAiTrainer>();
 
-			for (long i = 0; i < learningIteration / (learningPeers + learningPeersRandom); i++)
+			for (long i = 0; i < learningIteration / (learningPeers + learningPeersMutants); i++)
 			{
-				bestSnakeAI.Clear();
+				students.Clear();
 
-				using (MemoryStream stream = new MemoryStream())
+				for (int j = 0; j < learningPeers + learningPeersMutants; j++)
 				{
-					SuperNetwork.Save(stream);
+					bool learnMode = j < learningPeersMutants;
+					SnakeNeuralAI snakeAI;
+					if (bestSnakeAIs.Count == parallelNetworks)
+						snakeAI = SnakeNeuralAI.Clone(bestSnakeAIs[j % parallelNetworks].SnakeNeuralAI.Network, learnMode);
+					else
+						snakeAI = SnakeNeuralAI.Clone(SuperNetwork, learnMode);
 
-					for (int j = 0; j < learningPeers; j++)
-					{
-						stream.Seek(0, SeekOrigin.Begin);
-						SnakeNeuralAI snakeAI = new SnakeNeuralAI(true, stream);
+					students.Add(new SnakeNeuralAiTrainer(snakeAI));
 
-						if (snakeAI.random.Next(100) < 2)
-						{
-							snakeAI.ReSeed();
-							snakeAI.isMutant = true;
-						}
-
-						bestSnakeAI.Add(new SnakeNeuralAiTrainer(snakeAI));
-
-					}
-
-					for (int j = 0; j < learningPeersRandom; j++)
-					{
-						stream.Seek(0, SeekOrigin.Begin);
-						SnakeNeuralAI snakeAI = new SnakeNeuralAI(true, stream);
-						snakeAI.Network.Randomize();
-
-						bestSnakeAI.Add(new SnakeNeuralAiTrainer(snakeAI));
-					}
 				}
 
-				Parallel.ForEach(bestSnakeAI, new ParallelOptions() { MaxDegreeOfParallelism = 6 }, (trainer) =>
+				Parallel.ForEach(students, new ParallelOptions() { MaxDegreeOfParallelism = 6 }, (trainer) =>
 				{
 					World world = new World(trainWorldWidth, trainWorldHeigh, foodPoints);
 					trainer.Train(world);
 				});
 
-				bestSnakeAI = bestSnakeAI.OrderByDescending(x => x.Score).Take(learningPeersToUseForSuper).ToList();
-
-				foreach (var bestOfTheBest in bestSnakeAI)
-				{
-					if (bestOfTheBest.Score > 0)// && bestOfTheBest.Score > bestScore * 0.1)
-						bestOfTheBest.AddResults(SuperTeacher);
-				}
-
-
-				bestScore = Math.Max(bestSnakeAI.Max(x => x.Score), bestScore);
+				bestSnakeAIs = students.OrderByDescending(x => x.Score).Take(parallelNetworks).ToList();
 
 				lock (_lockObjectFile)
 				{
-					SuperNetwork.Save(TrainingFileName);
+					if (bestSnakeAIs.First().Score > 0)// && bestOfTheBest.Score > bestScore * 0.1)
+						SuperNetwork = bestSnakeAIs.First().SnakeNeuralAI.Network;
 				}
+
+				bestScore = Math.Max(bestSnakeAIs.Max(x => x.Score), bestScore);
+
+				SuperNetwork.Save(TrainingFileName);
+
 				lock (_lockObjectConsole)
 				{
 					Console.SetCursorPosition(0, 0);
-					Console.WriteLine("Current average score: " + Math.Round(bestSnakeAI.Average(x => x.Score)) + "    ");
-					Console.WriteLine("Current best score: " + bestSnakeAI.Max(x => x.Score) + "     ");
-					Console.WriteLine("Learning progress: " + Math.Round((100m / (learningIteration / (learningPeers + learningPeersRandom))) * i) + "% (" + i * (learningPeers + learningPeersRandom) + " games played in " + stopwatch.Elapsed.ToString(@"hh\:mm\:ss") + ")");
+					Console.WriteLine("Current average score: " + Math.Round(bestSnakeAIs.Average(x => x.Score)) + "    ");
+					Console.WriteLine("Current best score: " + bestSnakeAIs.Max(x => x.Score) + "     ");
+					Console.WriteLine("Learning progress: " + Math.Round((100m / (learningIteration / (learningPeers + learningPeersMutants))) * i) + "% (" + i * (learningPeers + learningPeersMutants) + " games played in " + stopwatch.Elapsed.ToString(@"hh\:mm\:ss") + ")");
 				}
 			}
-			SuperNetwork.Save(@"c:\temp\Network" + bestScore);
-			return SnakeNeuralAI.Clone(SuperNetwork, false);
 		}
 
 		static void Main(string[] args)
@@ -126,8 +104,6 @@ namespace Snake
 			{
 				isTraining = true;
 
-				if (File.Exists(TrainingFileName))
-					File.Delete(TrainingFileName);
 				new Thread(() =>
 				{
 					Thread.CurrentThread.Priority = ThreadPriority.BelowNormal;
@@ -143,7 +119,7 @@ namespace Snake
 			{
 				snakeAI = new SnakeNeuralAI()
 				{
-					Network = ActivationNetwork.Load(@"AI\TrainedNetwork")
+					Network = NeuralNetwork.Load(@"AI\TrainedNetwork")
 				};
 			}
 
@@ -156,13 +132,7 @@ namespace Snake
 				{
 					lock (_lockObjectFile)
 					{
-						if (!File.Exists(TrainingFileName))
-							continue;
-
-						snakeAI = new SnakeNeuralAI()
-						{
-							Network = ActivationNetwork.Load(TrainingFileName)
-						};
+						snakeAI = SnakeNeuralAI.Clone(SuperNetwork, false);
 					}
 				}
 
@@ -178,7 +148,7 @@ namespace Snake
 					{
 						ConsoleRenderer.Render(world);
 					}
-					Thread.Sleep(Math.Max(0, 30 - (int)stopwatch.ElapsedMilliseconds));
+					Thread.Sleep(Math.Max(0, 50 - (int)stopwatch.ElapsedMilliseconds));
 
 
 					if (Console.KeyAvailable)
