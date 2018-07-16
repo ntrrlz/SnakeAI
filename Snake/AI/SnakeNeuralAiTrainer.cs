@@ -24,10 +24,9 @@ namespace Snake.AI
 			int limit = 0;
 			int noChangeScore = int.MinValue;
 			int noChangeCounter = 0;
-			while (world.Snake.Alive && 
-				(world.Score*2 > limit || limit < 100) &&  //If the snake is running in circles, save cpu cycles and abort run
-				noChangeCounter < 255 && //No food picked in 255 cycles? Running in cycles..:(
-				limit < 1000000) //Limit runtime
+			while (world.Snake.Alive &&
+				world.Score > -100000 &&
+				limit < 100000) //Limit runtime
 			{
 				if (world.Score == noChangeScore)
 				{
@@ -38,6 +37,12 @@ namespace Snake.AI
 					noChangeScore = world.Score;
 					noChangeCounter = 0;
 				}
+
+				if (noChangeCounter > 300) //No food picked in 300 cycles? Running in cycles..:(
+					world.Score = int.MinValue;
+
+				//world.Score-=3;
+		
 				SnakeNeuralAI.MakeDecision(world);
 				limit++;
 			}

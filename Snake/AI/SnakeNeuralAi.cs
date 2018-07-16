@@ -45,7 +45,7 @@ namespace Snake.AI
 
 		public static ActivationNetwork CreateNetwork()
 		{
-			return new ActivationNetwork(new BipolarSigmoidFunction(), 13, 3);
+			return new ActivationNetwork(new BipolarSigmoidFunction(), 14, 3);
 		}
 
 		public override void MakeDecision(World world)
@@ -64,9 +64,9 @@ namespace Snake.AI
 				world.IsBonusStraightAhead() ? 0 : 1,
 				world.IsBonusToTheLeft() ? 0 : 1,
 				world.IsBonusToTheRight() ? 0 : 1,
-				world.Snake.Tail.Count > 10 ? 0 : 1
+				world.Snake.Tail.Count > 6 ? 0 : 1,
+				((double)world.Snake.Direction) / 4
 			};
-
 
 			double[] output = Network.Compute(input);
 

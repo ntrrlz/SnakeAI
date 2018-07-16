@@ -138,7 +138,7 @@ namespace Snake.Game
 			return isClear;
 		}
 
-		public bool IsFoodStraightAhead()
+		/*public bool IsFoodStraightAhead()
 		{
 			Location newLocation = Snake.Location;
 
@@ -150,7 +150,22 @@ namespace Snake.Game
 			}
 
 			return false;
+		}*/
+
+		public bool IsFoodStraightAhead()
+		{
+			if (Food.Location.Y < Snake.Location.Y && Snake.Direction == Direction.Up)
+				return true;
+			if (Food.Location.Y > Snake.Location.Y && Snake.Direction == Direction.Down)
+				return true;
+			if (Food.Location.X < Snake.Location.X && Snake.Direction == Direction.Left)
+				return true;
+			if (Food.Location.X > Snake.Location.X && Snake.Direction == Direction.Right)
+				return true;
+
+			return false;
 		}
+
 
 		public bool IsFoodToTheRight()
 		{
@@ -194,7 +209,7 @@ namespace Snake.Game
 			return false;
 		}
 
-		public bool IsBonusStraightAhead()
+		/*public bool IsBonusStraightAhead()
 		{
 			if (!Bonus.Active)
 				return false;
@@ -207,6 +222,23 @@ namespace Snake.Game
 				if (newLocation == Bonus.Location)
 					return true;
 			}
+
+			return false;
+		}*/
+
+		public bool IsBonusStraightAhead()
+		{
+			if (!Bonus.Active)
+				return false;
+
+			if (Bonus.Location.Y < Snake.Location.Y && Snake.Direction == Direction.Up)
+				return true;
+			if (Bonus.Location.Y > Snake.Location.Y && Snake.Direction == Direction.Down)
+				return true;
+			if (Bonus.Location.X < Snake.Location.X && Snake.Direction == Direction.Left)
+				return true;
+			if (Bonus.Location.X > Snake.Location.X && Snake.Direction == Direction.Right)
+				return true;
 
 			return false;
 		}

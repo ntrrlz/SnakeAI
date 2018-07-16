@@ -22,11 +22,9 @@ namespace Snake.AI
 				case Decision.Continue:
 					break;
 				case Decision.TurnLeft:
-					//world.Score-=10;
 					world.Snake.TurnLeft();
 					break;
 				case Decision.TurnRight:
-					//world.Score-=10;
 					world.Snake.TurnRight();
 					break;
 				default:

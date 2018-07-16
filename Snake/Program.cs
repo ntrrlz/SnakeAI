@@ -18,14 +18,14 @@ namespace Snake
 		static object _lockObjectConsole = new object();
 		static object _lockObjectFile = new object();
 		const string TrainingFileName = @"AI\TrainingAi";
-		private static int trainWorldWidth = 20;
+		private static int trainWorldWidth = 40;
 		private static int trainWorldHeigh = 20;
 		private static int worldWidth = 40;
 		private static int worldHeigh = 20;
 		private static int foodPoints = 100;
 		private static long learningIteration = 10000000000;
-		private static int learningPeers = 150;
-		private static int learningPeersRandom = 350;
+		private static int learningPeers = 350;
+		private static int learningPeersRandom = 150;
 		//private static int numberOfLearningPaths = 5;
 		private static int learningPeersToUseForSuper = 20;
 
@@ -57,8 +57,11 @@ namespace Snake
 						stream.Seek(0, SeekOrigin.Begin);
 						SnakeNeuralAI snakeAI = new SnakeNeuralAI(true, stream);
 
-						if (snakeAI.random.Next(10000) < 3)
+						if (snakeAI.random.Next(100) < 2)
+						{
+							snakeAI.ReSeed();
 							snakeAI.isMutant = true;
+						}
 
 						bestSnakeAI.Add(new SnakeNeuralAiTrainer(snakeAI));
 
@@ -84,7 +87,7 @@ namespace Snake
 
 				foreach (var bestOfTheBest in bestSnakeAI)
 				{
-					if (bestOfTheBest.Score > bestScore * 0.1)
+					if (bestOfTheBest.Score > 0)// && bestOfTheBest.Score > bestScore * 0.1)
 						bestOfTheBest.AddResults(SuperTeacher);
 				}
 
@@ -175,7 +178,7 @@ namespace Snake
 					{
 						ConsoleRenderer.Render(world);
 					}
-					Thread.Sleep(Math.Max(0, 50 - (int)stopwatch.ElapsedMilliseconds));
+					Thread.Sleep(Math.Max(0, 0 - (int)stopwatch.ElapsedMilliseconds));
 
 
 					if (Console.KeyAvailable)
