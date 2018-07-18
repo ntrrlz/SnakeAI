@@ -17,15 +17,15 @@ namespace Snake
 		static object _lockObjectFile = new object();
 		const string TrainingFileName = @"AI\TrainingAi";
 		private static int trainWorldWidth = 20;
-		private static int trainWorldHeigh = 20;
+		private static int trainWorldHeigh = 10;
 		private static int worldWidth = 20;
-		private static int worldHeigh = 20;
+		private static int worldHeigh = 10;
 		private static int foodPoints = 100;
 		private static long learningIteration = 10000000000;
 		private static int learningPeers = 100;
-		private static int learningPeersMutants = 200;
+		private static int learningPeersMutants = 300;
 		//private static int numberOfLearningPaths = 5;
-		private static int parallelNetworks = 4;
+		private static int parallelNetworks = 40;
 
 		private static NeuralNetwork SuperNetwork = SnakeNeuralAI.CreateNetwork();
 

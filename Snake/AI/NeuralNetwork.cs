@@ -167,7 +167,7 @@ namespace Snake.AI
 
 
 						//mutate weight value 
-						double randomNumber = random.Next(0, 100000);
+						double randomNumber = random.Next(0, 100);
 
 						if (randomNumber <= 2f)
 						{ //if 1

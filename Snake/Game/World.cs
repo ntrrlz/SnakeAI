@@ -60,11 +60,13 @@ namespace Snake.Game
 
 		private void PlaceFood()
 		{
+			random = new Random(Guid.NewGuid().GetHashCode());
 			Food.Location = new Location(random.Next(Width - 2) + 1, random.Next(Height - 2) + 1);
 		}
 
 		private void PlaceBonus()
 		{
+			random = new Random(Guid.NewGuid().GetHashCode());
 			Bonus.Location = new Location(random.Next(Width - 2) + 1, random.Next(Height - 2) + 1);
 		}
 

@@ -24,8 +24,8 @@ namespace Snake.AI
 			int noChangeScore = int.MinValue + 1000;
 			int noChangeCounter = 0;
 			while (world.Snake.Alive &&
-				world.Score > -100000 &&
-				limit < 100000) //Limit runtime
+				world.Score > -1000 &&
+				limit < 10000) //Limit runtime
 			{
 				if (world.Score == noChangeScore)
 				{

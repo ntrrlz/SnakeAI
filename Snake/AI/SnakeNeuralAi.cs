@@ -20,6 +20,8 @@ namespace Snake.AI
 		{
 			SnakeNeuralAI clone = new SnakeNeuralAI(learn, new NeuralNetwork(network));
 
+			if (learn)
+				clone.Network.Mutate();
 			return clone;
 		}
 
@@ -35,7 +37,7 @@ namespace Snake.AI
 
 		public static NeuralNetwork CreateNetwork()
 		{
-			return new NeuralNetwork(new int[] { 14, 3 });
+			return new NeuralNetwork(new int[] { 13, 11, 3 });
 		}
 
 		public override void MakeDecision(World world)
@@ -54,13 +56,13 @@ namespace Snake.AI
 				world.IsBonusStraightAhead() ? 0 : 1,
 				world.IsBonusToTheLeft() ? 0 : 1,
 				world.IsBonusToTheRight() ? 0 : 1,
-				world.Snake.Tail.Count > 6 ? 0 : 1,
+				//world.Snake.Tail.Count > 10 ? 0 : 1,
 				((double)world.Snake.Direction) / 4
 			};
 
 			if (isLearning)
 			{
-				Network.Mutate();
+				//Network.Mutate();
 			}
 
 			double[] output = Network.FeedForward(input);

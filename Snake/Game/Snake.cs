@@ -6,10 +6,10 @@ namespace Snake.Game
 {
     public class Snake
     {
-		const int StartTailSize = 4;
+		const Decimal StartTailSize = 4;
 		public Location Location { get; set; }
 		public Queue<Location> Tail { get; set; }
-		private int TailSize;
+		private Decimal TailSize;
 
 		public Direction Direction { get; set; }
 		public bool Alive { get; set; }
@@ -25,7 +25,7 @@ namespace Snake.Game
 
 		public void Grow()
 		{
-			this.TailSize++;
+			this.TailSize+=2;
 		}
 
 		public void Shrink()
@@ -35,6 +35,7 @@ namespace Snake.Game
 
 		public void Update()
 		{
+			this.TailSize+=0.15m;
 			Tail.Enqueue(this.Location);
 
 			this.Location = GetPredictedLocation();
