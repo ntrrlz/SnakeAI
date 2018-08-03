@@ -59,15 +59,26 @@ namespace Snake.Game
 		}
 
 		private void PlaceFood()
-		{
-			random = new Random(Guid.NewGuid().GetHashCode());
-			Food.Location = new Location(random.Next(Width - 2) + 1, random.Next(Height - 2) + 1);
-		}
+        {
+            Food.Location = PickFreeLocation();
+        }
 
-		private void PlaceBonus()
+        private Location PickFreeLocation()
+        {
+            random = new Random(Guid.NewGuid().GetHashCode());
+
+            Location l;
+            do
+            {
+                l = new Location(random.Next(Width - 2) + 1, random.Next(Height - 2) + 1);
+            }
+            while (!IsClear(l));
+            return l;
+        }
+
+        private void PlaceBonus()
 		{
-			random = new Random(Guid.NewGuid().GetHashCode());
-			Bonus.Location = new Location(random.Next(Width - 2) + 1, random.Next(Height - 2) + 1);
+			Bonus.Location = PickFreeLocation();
 		}
 
 		public bool HitWall(Location location)
