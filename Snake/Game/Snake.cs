@@ -8,7 +8,7 @@ namespace Snake.Game
     {
 		const Decimal StartTailSize = 4;
 		public Location Location { get; set; }
-		public Queue<Location> Tail { get; set; }
+		public Queue<Location> Tail { get; }
 		private Decimal TailSize;
 
 		public Direction Direction { get; set; }
